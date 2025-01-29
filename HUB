@@ -1,1 +1,86 @@
-game.players.localplayer:kick("You have been kicked from this experience by Rip Indra")
+--Already Running
+if getgenv()["Already Running"] then return else getgenv()["Already Running"] = true end
+
+--Services
+local UIS = game:GetService("UserInputService")
+local VIM = game:GetService("VirtualInputManager")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+--Vars
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local flags = {Auto_Clicking = false, Mouse_Locked = false, Mouse_Locked_Position = Vector2.new(0, 0)}
+local TaskWait = task.wait
+local dragging = false
+
+--Create GUI
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Frame = Instance.new("Frame", ScreenGui)
+local ToggleButton = Instance.new("TextButton", Frame)
+local LockButton = Instance.new("TextButton", Frame)
+local TargetCircle = Instance.new("Frame", ScreenGui)
+
+--GUI Properties
+Frame.Size = UDim2.new(0, 150, 0, 100)
+Frame.Position = UDim2.new(0.05, 0, 0.05, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Frame.Active = true
+Frame.Draggable = true
+
+ToggleButton.Size = UDim2.new(1, 0, 0.4, 0)
+ToggleButton.Position = UDim2.new(0, 0, 0, 0)
+ToggleButton.Text = "Toggle Auto Clicker"
+ToggleButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+
+LockButton.Size = UDim2.new(1, 0, 0.4, 0)
+LockButton.Position = UDim2.new(0, 0, 0.5, 0)
+LockButton.Text = "Set Click Position"
+LockButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+
+TargetCircle.Size = UDim2.new(0, 20, 0, 20)
+TargetCircle.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
+TargetCircle.BackgroundTransparency = 0.5
+TargetCircle.Visible = false
+TargetCircle.Position = UDim2.new(0.5, -10, 0.5, -10)
+TargetCircle.ZIndex = 10
+
+--Enable dragging for Target Circle
+TargetCircle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+    end
+end)
+
+TargetCircle.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        TargetCircle.Position = UDim2.new(0, input.Position.X - 10, 0, input.Position.Y - 10)
+        flags.Mouse_Locked_Position = Vector2.new(input.Position.X, input.Position.Y)
+    end
+end)
+
+--Button Functions
+ToggleButton.MouseButton1Click:Connect(function()
+    flags.Auto_Clicking = not flags.Auto_Clicking
+    ToggleButton.Text = flags.Auto_Clicking and "Auto Clicker: ON" or "Auto Clicker: OFF"
+end)
+
+LockButton.MouseButton1Click:Connect(function()
+    TargetCircle.Visible = not TargetCircle.Visible
+end)
+
+--Auto Click Loop
+while true do
+    if flags.Auto_Clicking then
+        VIM:SendMouseButtonEvent(flags.Mouse_Locked_Position.X, flags.Mouse_Locked_Position.Y, 0, true, nil, 0)
+        VIM:SendMouseButtonEvent(flags.Mouse_Locked_Position.X, flags.Mouse_Locked_Position.Y, 0, false, nil, 0)
+    end
+    TaskWait(0.1)
+end
